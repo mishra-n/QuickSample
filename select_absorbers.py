@@ -123,15 +123,19 @@ def remove_values_within_range(A, B, n):
     Returns:
         tuple: Filtered array A and corresponding indices.
     """
-    selected_indices = []
-    
-    for i, a in enumerate(A):
-        if not any(np.abs(a - b) <= n for b in B):
-            selected_indices.append(i)
-    
+    # Calculate the absolute difference between each element of A and each element of B
+    diff = np.abs(A[:, None] - B)
+
+    # Check if each difference is less than or equal to n
+    mask = np.any(diff <= n, axis=1)
+
+    # Invert the mask to get the indices of the elements of A that are not within n of any element of B
+    selected_indices = np.where(~mask)[0]
+
+    # Use the selected indices to filter A
     filtered_A = A[selected_indices]
-    
-    return filtered_A, np.array(selected_indices)
+
+    return filtered_A, selected_indices
 
 
 def remove_current_line(line, z, known_lines):
