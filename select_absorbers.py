@@ -8,7 +8,6 @@ DV = [-400 * u.km/u.second, 400 * u.km/u.second]  # Velocity range
 DV2 = [-250 * u.km/u.second, 250 * u.km/u.second]  # Velocity range
 default_DV = [-60 * u.km/u.second, 60 * u.km/u.second]
 
-filtered_flux = None
 
 def find_critical_points(spectrum, line, z):
     """
@@ -24,9 +23,7 @@ def find_critical_points(spectrum, line, z):
         numpy.ndarray: Values of the critical points.
     """
     line_wave = line['wave'][0]
-    global filtered_flux
-    if filtered_flux is None:
-        filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
+    filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
     velocity_axis = to_velocity(spectrum.spectral_axis, line_wave, z)
     gradient = np.gradient(filtered_flux)
     crit_indices, crit_points = find_zero_crossings(velocity_axis, gradient)
@@ -46,10 +43,7 @@ def find_peaks(spectrum, line, z):
         numpy.ndarray: Values of the peaks.
     """
     line_wave = line['wave'][0]
-    global filtered_flux
-    if filtered_flux is None:
-        filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
-
+    filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
     velocity_axis = to_velocity(spectrum.spectral_axis, line_wave, z)
     crit_indices, crit_points = find_critical_points(spectrum, line, z)
     second_grad = np.gradient(np.gradient(filtered_flux))
@@ -72,10 +66,7 @@ def find_troughs(spectrum, line, z):
         numpy.ndarray: Values of the troughs.
     """
     line_wave = line['wave'][0]
-    global filtered_flux
-    if filtered_flux is None:
-        filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
-
+    filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
     velocity_axis = to_velocity(spectrum.spectral_axis, line_wave, z)
     crit_indices, crit_points = find_critical_points(spectrum, line, z)
     second_grad = np.gradient(np.gradient(filtered_flux))
@@ -98,9 +89,7 @@ def find_significant_peaks(spectrum, line, z):
         numpy.ndarray: Values of the significant peaks.
     """
     line_wave = line['wave'][0]
-    global filtered_flux
-    if filtered_flux is None:
-        filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
+    filtered_flux = gaussian_filter1d(spectrum.flux, sigma=SIGMA)
     velocity_axis = to_velocity(spectrum.spectral_axis, line_wave, z)
     peak_indices, peaks = find_peaks(spectrum, line, z)
     peak_fluxes = filtered_flux[peak_indices]
@@ -136,7 +125,6 @@ def remove_values_within_range(A, B, n):
     filtered_A = A[selected_indices]
 
     return filtered_A, selected_indices
-
 
 def remove_current_line(line, z, known_lines):
     """
