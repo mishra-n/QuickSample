@@ -27,6 +27,7 @@ def selectIsolated(dqso_cut, dl_cut, v_cut, dwarfs, avoid_these):
 
         d_qso = get_dls(z, QSO_coordinate, coordinate)
         if d_qso > dqso_cut:
+            # print('Outside quasar range')
             continue
 
         ############## 
@@ -37,16 +38,29 @@ def selectIsolated(dqso_cut, dl_cut, v_cut, dwarfs, avoid_these):
         dv_bool = np.abs(deltav) < v_cut
 
         v_selected = avoid_these_temp[dv_bool]
+
         ##############
         coordinates = SkyCoord(v_selected['RA']*u.degree, v_selected['DEC']*u.degree)
+        ##############
 
+        dls = get_dls(z, coordinates, QSO_coordinate)
+
+        dl_bool = np.abs(dls) < dl_cut
+
+        if  dl_bool.sum() > 0:
+            # print('Too close to another galaxy')
+            continue
+
+        ##############
         dls = get_dls(z, coordinates, coordinate)
 
-        dl_bool = dls < dl_cut
+        dl_bool = np.abs(dls) < dl_cut
 
-        if  dl_bool.sum() == 0:
-        
-            isolated.add_row(galaxy)
+        if  dl_bool.sum() > 0:
+            # print('Another galaxy to close to quasar')
+            continue
+
+        isolated.add_row(galaxy)
 
     end = time.time()
     #print(end-start, 'seconds')

@@ -105,7 +105,7 @@ def addIonRows(z, name, selected_lines=np.array(['HI','OVI', 'CIII']), new_table
     return new_table
 
 
-def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner_search_dv, outer_search_dv, upper_limit_dv):
+def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner_search_dv, outer_search_dv, upper_limit_dv, selected_lines=np.array(['HI','OVI', 'CIII'])):
     """
     Generate the quick look table.
 
@@ -124,20 +124,26 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
     for galaxy in galaxy_sample_table:
         z = galaxy['REDSHIFT']
         name = galaxy['SHORTNAME']
-        new_table = addIonRows(z, name, new_table=new_table)
-    
+        new_table = addIonRows(z, name, selected_lines=selected_lines, new_table=new_table)
+    print('length of new table: ', len(new_table))
+
     for row in new_table:
+        z = row['z']
+        name = row['name']
+        print('name: ', name)
         line = SEARCH_LINES[SEARCH_LINES['tempname']==row['line']]
-        if line['wave'][0]*(1+z) < 1100 or line['wave'][0]*(1+z) > 1790:
+        if (line['wave'][0]*(1+z) < 1100) or (line['wave'][0]*(1+z) > 1790):
+            # print('print1', line['wave'][0]*(1+z), line['wave'][0], print(z))
             row['out_of_range'] = True
+            print('out of range')
             continue
         
         inrange_trough_indices, inrange_troughs = find_inrange_troughs(spectrum, line, z, dv=outer_search_dv)
-        sig_uk_inrange_peak_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, line, z, identification_table, dv=outer_search_dv)
+        sig_uk_inrange_peak_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, line, z, identification_table, dv=inner_search_dv)
 
         mask = mask_known_line_range(spectrum, line, z, identification_table, dv=outer_search_dv)
         if len(sig_uk_inrange_peaks) !=0:
-            print(line['wave'][0])
+            print('detection')
             left_peak_bound, right_peak_bound, center_peak, left_peak_bound_index, right_peak_bound_index, center_peak_index = find_uk_peak_range(spectrum, line, z, identification_table, dv=outer_search_dv)
             row['vmin'] = left_peak_bound
             row['vmax'] = right_peak_bound
@@ -153,19 +159,22 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
         free = default_range_free(spectrum, line, z, identification_table, dv=outer_search_dv, upper_limit_dv=upper_limit_dv)
         if free:
             print('free')
-            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=[-60 * u.km/u.second, 60 * u.km/u.second])
-            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=[-60 * u.km/u.second, 60 * u.km/u.second])
+            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv)
+            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv)
             row['default_Wr'] = Wr
             row['default_WrErr'] = WrErr
             row['default_SNR'] = Wr/WrErr
             row['default_AOD'] = AOD
             row['default_AODErr'] = AODErr
             row['default_upper_limit'] = True
-            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=[-60 * u.km/u.second, 60 * u.km/u.second], mask=mask)
-            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=[-60 * u.km/u.second, 60 * u.km/u.second], mask=mask)
+            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv, mask=mask)
+            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv, mask=mask)
             N, NErr = AOD_to_N(AOD, AODErr, line)
             row['default_UL_N'] = 3 * NErr
-            
+        
+        if np.isnan(new_table[new_table['name'] ==  name]['SNR'].max()):
+            continue
+
         max_SNR = new_table[new_table['name'] ==  name]['SNR'].max()
         selected_row = new_table[(new_table['SNR'] == max_SNR)]
         vmin = selected_row['vmin'][0]
@@ -179,11 +188,12 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
                 continue
             line = SEARCH_LINES[SEARCH_LINES['tempname'] == row['line']]
             if line['wave']*(1+z) < 1115 or line['wave']*(1+z) > 1790:
+                # print('print2', line['wave'][0]*(1+z), line['wave'][0], print(z))
                 row['out_of_range'] = True
                 continue
             
             inrange_trough_indices, inrange_troughs = find_inrange_troughs(spectrum, line, z, dv=outer_search_dv)
-            sig_uk_inrange_peak_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, line, z, identification_table, dv=outer_search_dv)
+            sig_uk_inrange_peak_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, line, z, identification_table, dv=inner_search_dv)
 
             mask = mask_known_line_range(spectrum, line, z, identification_table, dv=outer_search_dv)
             
@@ -195,7 +205,6 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
             row['Wr'] = Wr
             row['WrErr'] = WrErr
 
-            row['Wr'] = Wr
             row['SNR'] = Wr/WrErr
             row['AOD'] = AOD
             row['AODErr'] = AODErr

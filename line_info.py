@@ -43,12 +43,12 @@ def genLineTable():
    LyD = getfeature('HI', 'LyD', 972.5368)
    LyG = getfeature('HI', 'LyG', 949.742)
    LyE = getfeature('HI', 'LyE', 937.8035)
-   LyZ = getfeature('HI', 'LyZ', 930.748)
-   LyH = getfeature('HI', 'LyH', 926.225)
-   LyT = getfeature('HI', 'LyT', 923.150)
-   LyI = getfeature('HI', 'LyI', 920.963)
-   LyK = getfeature('HI', 'LyK', 919.351)
-   LyL = getfeature('HI', 'LyL', 918.351)
+   # LyZ = getfeature('HI', 'LyZ', 930.748)
+   # LyH = getfeature('HI', 'LyH', 926.225)
+   # LyT = getfeature('HI', 'LyT', 923.150)
+   # LyI = getfeature('HI', 'LyI', 920.963)
+   # LyK = getfeature('HI', 'LyK', 919.351)
+   # LyL = getfeature('HI', 'LyL', 918.351)
    
    OII_1 = getfeature('OII', 'OII_1', 834.4655)
    OII_2 = getfeature('OII', 'OII_2', 833.3294)
@@ -84,7 +84,7 @@ def genLineTable():
    NV_1 = getfeature('NV', 'NV_1', 1238.821)
    NV_2 = getfeature('NV', 'NV_2', 1242.804)
 
-   SEARCH_LINES = vstack([LyA, LyB, LyD, LyG, LyE, LyZ, LyH, LyT, LyI, LyK, LyL,
+   SEARCH_LINES = vstack([LyA, LyB, LyD, LyG, LyE, #LyZ, LyH, LyT, LyI, LyK, LyL,
                            OII_1, OII_2, OII_3, OIII_1, OIII_2, OVI_1, OVI_2, 
                            CII_1, CII_2, CIII, CIV_1, CIV_2, 
                            SiII_1, SiII_2, SiII_3, SiII_4, SiII_5, SiII_6, SiII_7, SiIII, SiIV_1, SiIV_2,

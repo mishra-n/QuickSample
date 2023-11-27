@@ -162,7 +162,7 @@ def find_significant_unknown_peaks(spectrum, line, z, known_lines):
 
     new_known_mask = remove_current_line(line, z, known_lines)
 
-    sig_uk_peaks, indices_temp = remove_values_within_range(sig_peaks, known_velocities[new_known_mask], n=50 * u.km/u.second)
+    sig_uk_peaks, indices_temp = remove_values_within_range(sig_peaks, known_velocities[new_known_mask], n=75 * u.km/u.second)
     sig_uk_peak_indices = sig_peak_indices[indices_temp]
 
     return sig_uk_peak_indices, sig_uk_peaks
