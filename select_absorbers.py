@@ -1,5 +1,6 @@
 from header import *
 from helpers import *
+from line_info import *
 
 SIGMA = 10  # Standard deviation for Gaussian filter
 FLUX_CUT = 0.8  # Flux threshold for significant peaks
@@ -323,6 +324,41 @@ def mask_known_line_range(spectrum, line, z, known_lines, dv):
 
     return np.array(mask, dtype='bool')
 
+def mask_known_line_range_full(spectrum, known_lines):
+    """
+    Masks the known line range within a spectrum.
+    
+    Args:
+        spectrum (numpy.ndarray): Input spectrum.
+        line (numpy.ndarray): Current line information.
+        z (float): Redshift value.
+        known_lines (numpy.ndarray): Array of known lines.
+        dv (tuple): Velocity range.
+        
+    Returns:
+        numpy.ndarray: Mask indicating the known line range.
+    """
+    test_line = SEARCH_LINES[SEARCH_LINES['tempname'] =='LyA']
+
+
+    velocity_axis = to_velocity(spectrum.spectral_axis, test_line['wave'], 0)
+    known_velocities = to_velocity(known_lines['wave_o'], test_line['wave'], 0)
+
+    # velocity_check_mask = (known_velocities > 3*dv[0]) * (known_velocities < 3*dv[1])
+
+    # known_velocities = known_velocities[velocity_check_mask]
+
+    inrange_trough_indices, inrange_troughs = find_troughs(spectrum, test_line, 0)#, dv=[3*DV[0], 3*DV[1]])
+
+    mask = np.ones(shape=velocity_axis.shape)
+    for known_velocity in known_velocities:
+        left_peak_bound = find_left(inrange_troughs, known_velocity)
+        right_peak_bound = find_right(inrange_troughs, known_velocity)
+        mask *= (velocity_axis > right_peak_bound) + (velocity_axis < left_peak_bound)
+    #mask *= (velocity_axis > dv[0]) * (velocity_axis < dv[1])
+
+    return np.array(mask, dtype='bool')
+
 
 def mask_uk_peak_range(spectrum, line, z, known_lines, dv):
     """
@@ -347,6 +383,25 @@ def mask_uk_peak_range(spectrum, line, z, known_lines, dv):
     velocity_check_mask = (velocity_axis > left_peak_bound) * (velocity_axis < right_peak_bound)
     return np.array(velocity_check_mask, dtype='bool')
 
+def full_mask(spectrum, known_lines):
+    test_line = SEARCH_LINES[SEARCH_LINES['tempname'] =='LyA']
+    sig_uk_inrange_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, test_line, 0, known_lines, [-1e10 * u.km/u.second, 1e10 * u.km/u.second])
+    inrange_trough_indices, inrange_troughs = find_inrange_troughs(spectrum, test_line, 0, [-1e10 * u.km/u.second, 1e10 * u.km/u.second])
+
+    velocity_axis = to_velocity(spectrum.spectral_axis, test_line['wave'], 0)
+    mask1 = np.ones(shape=velocity_axis.shape)
+    for known_velocity in sig_uk_inrange_peaks:
+        left_peak_bound = find_left(inrange_troughs, known_velocity)
+        right_peak_bound = find_right(inrange_troughs, known_velocity)
+        mask1 *= (velocity_axis > right_peak_bound) + (velocity_axis < left_peak_bound)
+    mask2 = mask_known_line_range_full(spectrum, known_lines)
+    mask1 = mask1.astype(bool)
+    mask2 = mask2.astype(bool)
+
+    return np.invert(mask1*mask2)
+
+
+
 def default_range_free(spectrum, line, z, known_lines, dv, upper_limit_dv):
     line_wave = line['wave'][0]
 
@@ -356,6 +411,7 @@ def default_range_free(spectrum, line, z, known_lines, dv, upper_limit_dv):
 
 
     sig_uk_inrange_peak_indices, sig_uk_inrange_peaks = find_significant_unknown_inrange_peaks(spectrum, line, z, known_lines, dv)
+
     if len(sig_uk_inrange_peaks) == 0:
         mask1 = np.zeros(shape=velocity_axis.shape[0])
     else:
