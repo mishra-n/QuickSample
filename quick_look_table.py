@@ -156,21 +156,21 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
             row['AOD'] = AOD
             row['AODErr'] = AODErr
 
-        free = default_range_free(spectrum, line, z, identification_table, dv=outer_search_dv, upper_limit_dv=upper_limit_dv)
-        if free:
-            print('free')
-            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv)
-            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv)
-            row['default_Wr'] = Wr
-            row['default_WrErr'] = WrErr
-            row['default_SNR'] = Wr/WrErr
-            row['default_AOD'] = AOD
-            row['default_AODErr'] = AODErr
-            row['default_upper_limit'] = True
-            Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv, mask=mask)
-            AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv, mask=mask)
-            N, NErr = AOD_to_N(AOD, AODErr, line)
-            row['default_UL_N'] = 3 * NErr
+        # free = default_range_free(spectrum, line, z, identification_table, dv=outer_search_dv, upper_limit_dv=upper_limit_dv)
+        # if free:
+        #   print('free')
+        AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv)
+        Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv)
+        row['default_Wr'] = Wr
+        row['default_WrErr'] = WrErr
+        row['default_SNR'] = Wr/WrErr
+        row['default_AOD'] = AOD
+        row['default_AODErr'] = AODErr
+        row['default_ upper_limit'] = True
+        Wr, WrErr = calc_Wr(spectrum, line, z, v=0, dv=upper_limit_dv)
+        AOD, AODErr = calc_AOD(spectrum, line, z, v=0, dv=upper_limit_dv)
+        N, NErr = AOD_to_N(AOD, AODErr, line)
+        row['default_UL_N'] = 2 * NErr
         
         if np.isnan(new_table[new_table['name'] ==  name]['SNR'].max()):
             continue
@@ -212,5 +212,5 @@ def genQuickLookTable(galaxy_sample_table, identification_table, spectrum, inner
             N, NErr = AOD_to_N(AOD, AODErr, line)
             row['N'] = N
             row['NErr'] = NErr
-            row['UL_N'] = 3 * NErr
+            row['UL_N'] = 2 * NErr
     return new_table
